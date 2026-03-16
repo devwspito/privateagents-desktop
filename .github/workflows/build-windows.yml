@@ -8,14 +8,11 @@ on:
 
 permissions:
   contents: write
-  id-token: write
   actions: read
 
 jobs:
   build-windows:
     runs-on: windows-latest
-    outputs:
-      artifact-id: ${{ steps.upload.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
 
@@ -65,7 +62,6 @@ jobs:
           echo "Found: $($nsis.FullName)"
 
       - name: Upload artifact for signing
-        id: upload
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-installer
@@ -75,18 +71,83 @@ jobs:
     needs: build-windows
     runs-on: ubuntu-latest
     steps:
-      - name: Submit signing request to SignPath
-        uses: signpath/github-action-submit-signing-request@v1
+      - name: Download unsigned installer
+        uses: actions/download-artifact@v4
         with:
-          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: "b2fb627f-2c7b-480c-8921-d99c9ba21f6d"
-          project-slug: "Private_Agents_Desktop"
-          signing-policy-slug: "test-signing"
-          artifact-configuration-slug: "Default"
-          github-artifact-id: ${{ needs.build-windows.outputs.artifact-id }}
-          wait-for-completion: true
-          wait-for-completion-timeout-in-seconds: 600
-          output-artifact-directory: ./signed
+          name: unsigned-installer
+          path: ./unsigned
+
+      - name: Sign with SignPath API
+        env:
+          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+        run: |
+          ORG_ID="b2fb627f-2c7b-480c-8921-d99c9ba21f6d"
+          API="https://app.signpath.io/API/v1/${ORG_ID}"
+
+          EXE=$(ls ./unsigned/*.exe | head -1)
+          EXE_NAME=$(basename "$EXE")
+          echo "Signing: $EXE_NAME"
+
+          # Submit signing request
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST "${API}/SigningRequests" \
+            -H "Authorization: Bearer ${SIGNPATH_API_TOKEN}" \
+            -F "ProjectSlug=Private_Agents_Desktop" \
+            -F "SigningPolicySlug=test-signing" \
+            -F "ArtifactConfigurationSlug=Default" \
+            -F "Artifact=@${EXE}")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          echo "Submit response (HTTP $HTTP_CODE): $BODY"
+
+          if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
+            echo "::error::SignPath submit failed (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+
+          REQUEST_ID=$(echo "$BODY" | jq -r '.signingRequestId // .id // empty')
+          if [ -z "$REQUEST_ID" ]; then
+            echo "::error::Could not extract signing request ID"
+            exit 1
+          fi
+          echo "Signing request ID: $REQUEST_ID"
+
+          # Poll for completion (max 10 min)
+          for i in $(seq 1 60); do
+            sleep 10
+            STATUS_RESPONSE=$(curl -s \
+              -H "Authorization: Bearer ${SIGNPATH_API_TOKEN}" \
+              "${API}/SigningRequests/${REQUEST_ID}")
+            STATUS=$(echo "$STATUS_RESPONSE" | jq -r '.status')
+            echo "Status: $STATUS (attempt $i/60)"
+
+            if [ "$STATUS" = "Completed" ]; then
+              echo "Signing completed!"
+              break
+            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Denied" ] || [ "$STATUS" = "Cancelled" ]; then
+              echo "::error::Signing failed with status: $STATUS"
+              exit 1
+            fi
+          done
+
+          if [ "$STATUS" != "Completed" ]; then
+            echo "::error::Signing timed out"
+            exit 1
+          fi
+
+          # Download signed artifact
+          mkdir -p ./signed
+          DOWNLOAD_URL=$(echo "$STATUS_RESPONSE" | jq -r '.signedArtifactLink // empty')
+          if [ -z "$DOWNLOAD_URL" ]; then
+            DOWNLOAD_URL="${API}/SigningRequests/${REQUEST_ID}/SignedArtifact"
+          fi
+
+          curl -s -o "./signed/${EXE_NAME}" \
+            -H "Authorization: Bearer ${SIGNPATH_API_TOKEN}" \
+            "$DOWNLOAD_URL"
+
+          echo "Downloaded signed artifact: ${EXE_NAME} ($(stat -c%s "./signed/${EXE_NAME}") bytes)"
 
       - name: Upload signed artifact
         uses: actions/upload-artifact@v4
