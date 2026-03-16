@@ -94,7 +94,7 @@ jobs:
             -H "Authorization: Bearer ${SIGNPATH_API_TOKEN}" \
             -F "ProjectSlug=Private_Agents_Desktop" \
             -F "SigningPolicySlug=test-signing" \
-            -F "ArtifactConfigurationSlug=Default" \
+            -F "ArtifactConfigurationSlug=initial" \
             -F "Artifact=@${EXE}")
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
