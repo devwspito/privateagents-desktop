@@ -1,0 +1,506 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+@import "./themes.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================================
+   ENHANCED THEME - Modern, Mobile-First, Native Feel
+   ============================================================================ */
+
+@theme inline {
+  /* Typography - System fonts for native feel */
+  --font-lato:
+    var(--font-lato), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-cairo:
+    var(--font-cairo), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Color System */
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  /* Border Radius */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Animations - Smooth and Native Feel */
+  --animate-accordion-down: accordion-down 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --animate-accordion-up: accordion-up 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --animate-collapsible-down: collapsible-down 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --animate-collapsible-up: collapsible-up 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --animate-collapsible-right: collapsible-right 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --animate-collapsible-left: collapsible-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+  @keyframes collapsible-down {
+    from { height: 0; }
+    to { height: var(--radix-collapsible-content-height); }
+  }
+  @keyframes collapsible-up {
+    from { height: var(--radix-collapsible-content-height); }
+    to { height: 0; }
+  }
+  @keyframes collapsible-right {
+    from { width: 0; }
+    to { width: var(--radix-collapsible-content-width); }
+  }
+  @keyframes collapsible-left {
+    from { width: var(--radix-collapsible-content-width); }
+    to { width: 0; }
+  }
+}
+
+/* ============================================================================
+   CONTAINER - Responsive with Safe Areas
+   ============================================================================ */
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1rem;
+  
+  /* Mobile-first: full width on small screens */
+  @media (width >= --theme(--breakpoint-sm)) {
+    max-width: none;
+  }
+  
+  /* Tablet and up: centered with max-width */
+  @media (width >= 1400px) {
+    max-width: 1400px;
+  }
+  
+  /* Add safe area padding for notch devices */
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+/* ============================================================================
+   BASE STYLES - Mobile-First Foundation
+   ============================================================================ */
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border, currentColor);
+  }
+  
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE UTILITIES
+   ============================================================================ */
+
+@layer utilities {
+  /* Touch device detection */
+  @media (hover: none) and (pointer: coarse) {
+    .touch-only { @apply block; }
+    .desktop-only { @apply hidden; }
+  }
+  
+  @media (hover: hover) and (pointer: fine) {
+    .touch-only { @apply hidden; }
+    .desktop-only { @apply block; }
+  }
+  
+  /* Responsive spacing */
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-left { padding-left: env(safe-area-inset-left); }
+  .safe-right { padding-right: env(safe-area-inset-right); }
+  
+  /* Native-like momentum scrolling */
+  .scroll-momentum {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+}
+
+/* ============================================================================
+   ENHANCED COMPONENTS
+   ============================================================================ */
+
+@layer components {
+  /* Card with subtle shadow and glass effect */
+  .card-elevated {
+    @apply bg-card border border-border rounded-lg shadow-sm;
+    @apply backdrop-blur-sm;
+    background-color: hsl(var(--card) / 0.95);
+    @apply transition-shadow duration-200;
+    @apply hover:shadow-md;
+  }
+  
+  /* Button variants for mobile */
+  .btn-touch {
+    @apply min-h-[44px] px-6 py-3;
+    @apply rounded-lg font-medium;
+    @apply transition-all duration-200;
+    @apply active:scale-95;
+  }
+  
+  /* Input optimized for mobile */
+  .input-mobile {
+    @apply text-base; /* Prevents zoom on iOS */
+    @apply min-h-[44px] px-4;
+    @apply rounded-lg border border-input;
+    @apply bg-background;
+  }
+  
+  /* Bottom sheet style */
+  .bottom-sheet {
+    @apply fixed bottom-0 left-0 right-0;
+    @apply bg-card rounded-t-2xl;
+    @apply shadow-2xl;
+    @apply max-h-[90vh] overflow-y-auto;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    animation: slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Navigation bar for mobile */
+  .mobile-nav {
+    @apply fixed bottom-0 left-0 right-0;
+    @apply backdrop-blur-lg;
+    @apply border-t border-border;
+    @apply px-2 z-50;
+    background-color: hsl(var(--card) / 0.95);
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+/* ============================================================================
+   CALENDAR THEME
+   ============================================================================ */
+
+:root {
+  /* Theme variable fallbacks (themes.css classes don't include these) */
+  --success: 142.1 76.2% 36.3%;
+  --success-foreground: 0 0% 98%;
+  --radius: 0.5rem;
+  --chart-1: 220 70% 50%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 30 80% 55%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 340 75% 55%;
+  --sidebar-background: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  /* Calendar vars */
+  --fc-small-font-size: 0.875em;
+  --fc-page-bg-color: hsl(var(--border));
+  --fc-neutral-bg-color: hsl(var(--border));
+  --fc-neutral-text-color: hsl(var(--accent-foreground));
+  --fc-border-color: hsl(var(--border));
+  --fc-button-text-color: hsl(var(--background));
+  --fc-button-bg-color: hsl(var(--primary));
+  --fc-button-border-color: hsl(var(--primary));
+  --fc-button-hover-bg-color: hsl(var(--primary) / 0.8);
+  --fc-button-hover-border-color: hsl(var(--primary));
+  --fc-button-active-bg-color: hsl(var(--primary) / 0.8);
+  --fc-button-active-border-color: hsl(var(--primary) / 0);
+  --fc-event-bg-color: hsl(var(--primary));
+  --fc-event-border-color: hsl(var(--primary));
+  --fc-event-text-color: hsl(var(--background));
+  --fc-event-selected-overlay-color: hsl(var(--muted));
+  --fc-more-link-bg-color: hsl(var(--muted));
+  --fc-more-link-text-color: inherit;
+  --fc-event-resizer-thickness: 8px;
+  --fc-event-resizer-dot-total-width: 8px;
+  --fc-event-resizer-dot-border-width: var(--radius);
+  --fc-non-business-color: rgba(215, 215, 215, 0.3);
+  --fc-bg-event-color: hsl(var(--success));
+  --fc-bg-event-opacity: 0.3;
+  --fc-highlight-color: rgba(188, 232, 241, 0.3);
+  --fc-today-bg-color: hsl(var(--primary) / 0.15);
+  --fc-now-indicator-color: hsl(var(--destructive));
+}
+
+/* ============================================================================
+   EMOJI PICKER
+   ============================================================================ */
+
+aside.EmojiPickerReact {
+  --epr-emoji-size: 2rem;
+  --epr-emoji-padding: 0.25rem;
+  --epr-emoji-gap: 0.5rem;
+  --epr-hover-bg-color: hsl(var(--accent));
+  --epr-focus-bg-color: hsl(var(--accent));
+  --epr-bg-color: hsl(var(--background));
+  --epr-reactions-bg-color: hsl(var(--background));
+  --epr-highlight-color: hsl(var(--primary));
+  --epr-category-icon-active-color: hsl(var(--primary));
+  --epr-category-label-bg-color: hsl(var(--background));
+  --epr-text-color: hsl(var(--foreground));
+  --epr-horizontal-padding: 0.75rem;
+  --epr-search-input-bg-color: hsl(var(--muted));
+  --epr-search-input-border-radius: var(--radius);
+  --epr-search-input-padding: 0 40px;
+  --epr-preview-text-size: 0.875rem;
+  --epr-header-padding: var(--epr-horizontal-padding) var(--epr-horizontal-padding);
+  --epr-picker-border-radius: var(--radius);
+  --epr-picker-border-color: hsl(var(--border));
+  --epr-skin-tone-outer-border-color: hsl(var(--border));
+}
+
+.EmojiPickerReact .epr-btn {
+  border-radius: var(--radius);
+}
+
+.EmojiPickerReact .epr-btn:focus::before {
+  border-radius: var(--radius);
+  border-width: 1px;
+}
+
+/* ============================================================================
+   SCROLLBAR STYLES
+   ============================================================================ */
+
+/* Prevent horizontal scroll globally */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Subtle themed scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted)) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ============================================================================
+   CONTAINER HELPER
+   ============================================================================ */
+
+/* Allow containers to expand naturally */
+.container {
+  height: auto;
+  min-height: 100%;
+}
+
+/* ============================================================================
+   DARK MODE SPECIFIC
+   ============================================================================ */
+
+.dark {
+  --success: 142.4 71.8% 29.2%;
+  --success-foreground: 0 0% 98%;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+  }
+}
+
+/* ============================================================================
+   PRINT STYLES
+   ============================================================================ */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white;
+    color: black;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  @apply outline-2 outline-offset-2 outline-primary;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --border: 0 0% 0%;
+    --ring: 0 0% 0%;
+  }
+}
+
+/* ============================================================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================================================ */
+
+/* GPU acceleration for animations */
+.transform-gpu {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Reduce repaints */
+.contain-paint {
+  contain: paint;
+}
+
+/* Improve rendering performance */
+.optimize-speed {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Prose that inherits text color from parent (for user message bubbles) */
+.prose-inherit {
+  --tw-prose-body: currentColor;
+  --tw-prose-headings: currentColor;
+  --tw-prose-lead: currentColor;
+  --tw-prose-bold: currentColor;
+  --tw-prose-counters: currentColor;
+  --tw-prose-bullets: currentColor;
+  --tw-prose-quotes: currentColor;
+  --tw-prose-code: currentColor;
+}
