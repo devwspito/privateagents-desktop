@@ -1,0 +1,111 @@
+name: Build Windows & Sign
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install frontend dependencies
+        run: pnpm install
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Private Agents ${{ github.ref_name }}"
+          releaseBody: "Download the installer below for your platform."
+          releaseDraft: true
+          prerelease: false
+
+      - name: Find built exe
+        id: find-exe
+        shell: pwsh
+        run: |
+          $nsis = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*.exe" -Recurse | Select-Object -First 1
+          echo "NSIS_PATH=$($nsis.FullName)" >> $env:GITHUB_OUTPUT
+          echo "NSIS_NAME=$($nsis.Name)" >> $env:GITHUB_OUTPUT
+          echo "Found: $($nsis.FullName)"
+
+      - name: Upload artifact for signing
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-installer
+          path: ${{ steps.find-exe.outputs.NSIS_PATH }}
+
+  sign:
+    needs: build-windows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download unsigned artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: unsigned-installer
+          path: ./unsigned
+
+      - name: Find exe file
+        id: find
+        run: |
+          EXE=$(ls ./unsigned/*.exe | head -1)
+          echo "EXE_PATH=$EXE" >> $GITHUB_OUTPUT
+          echo "EXE_NAME=$(basename $EXE)" >> $GITHUB_OUTPUT
+
+      - name: Submit signing request to SignPath
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: "b2fb627f-2c7b-480c-8921-d99c9ba21f6d"
+          project-slug: "Private_Agents_Desktop"
+          signing-policy-slug: "test-signing"
+          artifact-configuration-slug: "Default"
+          input-artifact-path: ${{ steps.find.outputs.EXE_PATH }}
+          output-artifact-path: ./signed/${{ steps.find.outputs.EXE_NAME }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 600
+
+      - name: Upload signed artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-installer
+          path: ./signed/
+
+      - name: Upload to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./signed/*.exe
+          draft: true
