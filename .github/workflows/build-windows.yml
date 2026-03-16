@@ -9,10 +9,13 @@ on:
 permissions:
   contents: write
   id-token: write
+  actions: read
 
 jobs:
   build-windows:
     runs-on: windows-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
 
@@ -62,6 +65,7 @@ jobs:
           echo "Found: $($nsis.FullName)"
 
       - name: Upload artifact for signing
+        id: upload
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-installer
@@ -71,19 +75,6 @@ jobs:
     needs: build-windows
     runs-on: ubuntu-latest
     steps:
-      - name: Download unsigned artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: unsigned-installer
-          path: ./unsigned
-
-      - name: Find exe file
-        id: find
-        run: |
-          EXE=$(ls ./unsigned/*.exe | head -1)
-          echo "EXE_PATH=$EXE" >> $GITHUB_OUTPUT
-          echo "EXE_NAME=$(basename $EXE)" >> $GITHUB_OUTPUT
-
       - name: Submit signing request to SignPath
         uses: signpath/github-action-submit-signing-request@v1
         with:
@@ -92,10 +83,10 @@ jobs:
           project-slug: "Private_Agents_Desktop"
           signing-policy-slug: "test-signing"
           artifact-configuration-slug: "Default"
-          input-artifact-path: ${{ steps.find.outputs.EXE_PATH }}
-          output-artifact-path: ./signed/${{ steps.find.outputs.EXE_NAME }}
+          github-artifact-id: ${{ needs.build-windows.outputs.artifact-id }}
           wait-for-completion: true
           wait-for-completion-timeout-in-seconds: 600
+          output-artifact-directory: ./signed
 
       - name: Upload signed artifact
         uses: actions/upload-artifact@v4
